@@ -47,6 +47,17 @@ To deactivate virtual environment,
 deactivate
 ```
 
+## Keywords
+
+- `exit` or `exit()`
+  Exit the CREPL by resetting the template.
+
+- `clear` or `clear()`
+  Clear the screen.
+
+- `reset` or `reset()`
+  Reset the template.
+
 ## Demo
 
 ![CREPL](https://raw.githubusercontent.com/surajkareppagol/Project-Assets/main/CREPL/CREPL.gif)
