@@ -2,6 +2,7 @@ import os
 import subprocess
 
 from console import Terminal
+from util import read_write_file
 
 console = Terminal()
 
@@ -11,13 +12,12 @@ def compile_and_run(snapshot_content):
         ["gcc", "template.c", "-o", "template"], capture_output=True
     )
 
+    # Check if file compiled correctly
+
     if not os.path.isfile("./template"):
         output = str(compiler_out.stderr, encoding="utf-8")
         console.print_panel(output)
-
-        with open("template.c", "w") as template:
-            template.write("".join(snapshot_content))
-
+        read_write_file("template.c", "w", "".join(snapshot_content))
         return 0
 
     execution_out = subprocess.run(["./template"], capture_output=True)

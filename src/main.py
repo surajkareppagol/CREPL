@@ -3,45 +3,48 @@ from sys import exit
 from compile import compile_and_run
 from console import Terminal
 from template import write_to_template
+from util import read_write_file
 
 console = Terminal()
 
 line = 5
-template_content = ""
 
-snapshot = ""
+data = read_write_file("template.c", "r")
+template_code = "".join(data)
+snapshot_code = data[:]
 
 
-with open("template.c", "r") as template:
-    data = template.readlines()
-    template_content = "".join(data)
-    snapshot_content = data[:]
+def clear_and_print():
+    console.clear()
+    console.print_panel("CREPL - C Read Eval Print Loop")
 
-console.clear()
-console.print_panel("CREPL - C Read Eval Print Loop")
+
+clear_and_print()
 
 while True:
     try:
-        user_code = console.input("[bold green]Input[/bold green]: ")
+        user_code = console.input("[bold green]Input[/bold green]: ").strip()
+
+        if user_code in ["exit", "exit()"]:
+            read_write_file("template.c", "w", template_code)
+            console.clear()
+            exit(0)
+        elif user_code in ["clear", "clear()"]:
+            clear_and_print()
+            continue
+        elif user_code in ["reset", "reset()"]:
+            read_write_file("template.c", "w", template_code)
+            continue
     except KeyboardInterrupt:
-        with open("template.c", "w") as template:
-            template.write(template_content)
+        read_write_file("template.c", "w", template_code)
         exit(1)
 
-    if user_code in ["exit", "exit()"]:
-        with open("template.c", "w") as template:
-            template.write(template_content)
-        console.clear()
-        break
-    elif user_code in ["clear"]:
-        console.clear()
-        console.print_panel("CREPL - C Read Eval Print Loop")
-        continue
-
-    snapshot_content = data[:]
+    snapshot_code = data[:]
     write_to_template(user_code, line, data)
     line = line + 2
 
-    if not compile_and_run(snapshot_content):
-        data = snapshot_content[:]
+    # If compilation fails revert to previous code
+
+    if not compile_and_run(snapshot_code):
+        data = snapshot_code[:]
         line = line - 2
