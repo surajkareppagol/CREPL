@@ -1,9 +1,8 @@
-import os
 import re
 
 from compile import compile_and_run
 from console import Terminal
-from util import clear_and_print, write_template
+from util import *
 
 
 class CodeInput(Terminal):
@@ -16,18 +15,20 @@ class CodeInput(Terminal):
 
         self.multi_line_global = False
         self.multi_line_local = False
-
-        self.pop_from = ""
-
         self.wrote_to_template = False
+        self.input_completed = False
+        self.pop_from = True
+
+        # True = Global, False = Local
 
         self.multi_line_code = ""
 
-        self.completed = False
-
         self.brackets_valid = []
 
+        # Formatting
+
         self.scope = ""
+        self.space = 2
 
         # Types
 
@@ -37,7 +38,7 @@ class CodeInput(Terminal):
 
         self.syntax_tokens = ["if", "else", "for", "while"]
 
-        self.function_regex = re.compile(r"[a-z]*\s[a-z]*\(.*\)+{")
+        self.function_regex = re.compile(r"[a-z]*\s[^0-9][a-z_A-Z]*\(.*\)+{")
 
     def initialise_template(self):
         self.file_global = [
@@ -50,65 +51,64 @@ class CodeInput(Terminal):
             "int main(){\n",
         ]
 
-    def handle_keywords(self, keyword):
-        if keyword == None:
-            return
-
-        if keyword in ["exit", "exit()"]:
-            if os.path.isfile("./template.c"):
-                os.unlink("./template.c")
-            super().clear()
-            exit(0)
-        elif keyword in ["clear", "clear()"]:
-            clear_and_print()
-            return "clear"
-        elif keyword in ["reset", "reset()"]:
-            return "reset"
-        elif keyword in ["show", "show()"]:
-            return "show"
-
     def check_scope(self, code):
         for token in self.syntax_tokens:
             if token in code:
-                return "l"
+                self.multi_line_local = True
+                return
 
         function_match = self.function_regex.match(code)
 
         if function_match:
-            return "g"
+            self.multi_line_global = True
+            return
         else:
             return None
 
-    def handle(self, code):
-        handler = self.handle_keywords(code)
+    def handle_keywords(self, keyword):
+        if keyword in ["exit", "exit()"]:
+            delete_template("template.c")
+            super().clear()
+            exit(0)
 
-        # 0 - Continue
-        if handler == "clear":
+        elif keyword in ["clear", "clear()"]:
             self.code_cell += 1
+            clear_and_print()
             return 0
-        elif handler == "reset":
+
+        elif keyword in ["reset", "reset()"]:
             self.code_cell += 1
             self.initialise_template()
             return 0
-        elif handler == "show":
-            if os.path.isfile("./template.c"):
-                with open("template.c") as file:
-                    super().print_panel("".join(file.readlines()))
+
+        elif keyword in ["show", "show()"]:
+            code = read_template("template.c")
+            super().print_panel(code)
+
             self.code_cell += 1
             return 0
 
+        return 1
+
+    def handle_input(self, code):
+        handler = self.handle_keywords(code)
+
+        if not handler:
+            return 0
+
         if self.brackets_valid and code.strip() == "}":
+            self.space = (len(self.brackets_valid) - 1) * 2
             self.brackets_valid.pop()
 
         if "}" in code and not self.brackets_valid:
-            self.multi_line_code += f"{code}\n"
+            self.multi_line_code += f"{code}\n\n"
 
             if self.multi_line_local:
-                self.pop_from = "l"
-                self.file_local.append(self.multi_line_code)
+                self.pop_from = False
+                self.file_local.append(f"\n{self.multi_line_code}")
             elif self.multi_line_global:
-                self.pop_from = "g"
-                self.file_functions.append(self.multi_line_code)
+                self.pop_from = True
+                self.file_functions.append(f"\n{self.multi_line_code}")
 
             self.multi_line_code = ""
 
@@ -116,24 +116,17 @@ class CodeInput(Terminal):
             self.multi_line_global = False
 
             self.wrote_to_template = True
-
-            self.completed = True
+            self.input_completed = True
 
         if not self.multi_line_global and not self.multi_line_local:
             self.scope = self.check_scope(code)
 
-        # In local scope
-        if (self.multi_line_local or self.scope == "l") and not self.completed:
-            self.multi_line_code += f"{code}\n"
-            self.multi_line_local = True
-            if "{" in code:
-                self.brackets_valid.append("{")
-            return 0
+        if (
+            self.multi_line_local or self.multi_line_global
+        ) and not self.input_completed:
+            self.space = len(self.brackets_valid) * 2
 
-        # In global scope
-        elif (self.multi_line_global or self.scope == "g") and not self.completed:
-            self.multi_line_code += f"{code}\n"
-            self.multi_line_global = True
+            self.multi_line_code += f"{self.space * ' '}{code}\n"
             if "{" in code:
                 self.brackets_valid.append("{")
             return 0
@@ -144,17 +137,18 @@ class CodeInput(Terminal):
 
             self.wrote_to_template = True
 
+        # Local scope for single line code
         if not self.wrote_to_template:
-            self.pop_from = "l"
-            self.file_local.append(f"{code}\n")
+            self.pop_from = False
+            self.file_local.append(f"{2 * ' '}{code}\n")
 
         self.wrote_to_template = False
-        self.completed = False
+        self.input_completed = False
 
         write_template(self.file_global, self.file_functions, self.file_local)
 
         if not compile_and_run():
-            if self.pop_from == "g":
+            if self.pop_from:
                 self.file_functions.pop()
             else:
                 self.file_local.pop()
