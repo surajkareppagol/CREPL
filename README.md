@@ -23,6 +23,7 @@ If there is an error, the lists will revert back to previous code.
 - Added support for nested statements
 - Used Regex to distinguish local and global statements
 - Add `show` and `global:` or `g:` keyword
+- Add `repeat` or `r` keyword
 
 ## C Template
 
@@ -80,11 +81,14 @@ deactivate
 - `g:` or `global:`
   Add global statements, use `g: #include <stdlib.h>` or `global: #define MAX 100`
 
+- `repeat` or `r`
+  To execute once again
+
 ## Demo
 
 ![CREPL](https://raw.githubusercontent.com/surajkareppagol/Project-Assets/main/CREPL/CREPL.gif)
 
 ## What Next ?
 
-- Refactor code
 - Add support to format code with correct spacing
+- Save various statements with id's so they can be modified afterwards
