@@ -88,6 +88,11 @@ class CodeInput(Terminal):
             self.code_cell += 1
             return 0
 
+        elif keyword in ["repeat", "r", "repeat()"]:
+            self.code_cell += 1
+            compile_and_run()
+            return 0
+
         return 1
 
     def handle_input(self, code):
