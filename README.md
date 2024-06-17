@@ -2,7 +2,7 @@
 
 `CREPL` is REPL (read–eval–print loop) program written in Python for C.
 
-![CREPL](https://raw.githubusercontent.com/surajkareppagol/Project-Assets/main/CREPL/CREPL.png)
+![CREPL](https://raw.githubusercontent.com/surajkareppagol/Assets/main/10%20-%20CREPL/CREPL.gif)
 
 ## How It Works ?
 
@@ -83,12 +83,3 @@ deactivate
 
 - `repeat` or `r`
   To execute once again
-
-## Demo
-
-![CREPL](https://raw.githubusercontent.com/surajkareppagol/Project-Assets/main/CREPL/CREPL.gif)
-
-## What Next ?
-
-- Add support to format code with correct spacing
-- Save various statements with id's so they can be modified afterwards
