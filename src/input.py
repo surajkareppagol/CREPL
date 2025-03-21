@@ -38,7 +38,9 @@ class CodeInput(Terminal):
 
         self.syntax_tokens = ["if", "else", "for", "while"]
 
-        self.function_regex = re.compile(r"[a-z]*\s[^0-9][a-z_A-Z]*\(.*\)+{")
+        self.function_regex = re.compile(
+            r"^((\bvoid\b)|(\bint\b)|(\bchar\b)|(\bfloat\b)|(\bdouble\b))*\s+[^0-9][a-z_A-Z]+\s*\(.*\)\s*{"
+        )
 
     def initialise_template(self):
         self.file_global = [
